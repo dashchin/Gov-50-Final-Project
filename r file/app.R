@@ -15,7 +15,7 @@ ui <- fluidPage(
 The graphs on this app represent two of them. I made a Frank Sinatra plot using a data set that catalogued the most popular songs on holiday seasons. 
 I know, at least generally, that I may want to chart the popularity of songs or genres over time, so I thought this was a good start. 
 I narrowed down that tibble to Frank Sinatra holiday songs just as an excercise. 
-
+Test
 The Earth, Wind & Fire plot was made with a different data set that has information on more than 160,000 songs. I filtered it for every EWF Song 
 and tried to model their most active years with the release_data column and the summarise() function. These are not necessarily graphs I'll need for the 
 final project, but they are examples of what I can do with the data.")), 
