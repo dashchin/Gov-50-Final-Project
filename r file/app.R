@@ -44,11 +44,6 @@ library(stringr)
 
 library(wordcloud2) 
 
-# Importing the ggthemr function, which sets a theme for all plots
-
-
-
-# Set a theme with ggthemr
 
 
 # Getting a large data set from the spotifyr library 
@@ -85,7 +80,8 @@ gt_tbl <- stan_glm(data = kanye, refresh = 0,
 
 model1 <- stan_glm(data = kanye, refresh = 0, loudness ~ album_release_year) 
 
-# streamsfplot 
+# Modified version of the kanye_streams object that counts the number of
+# features.
 
 streamsf_plot <- Kanye_streams %>% 
     mutate(collabs = str_count(With, ",") + 1) %>%  
@@ -101,7 +97,8 @@ streamsf_plot <- Kanye_streams %>%
          subtitle = "Including singles.")
 
 
- 
+ # Knit options
+
 knitr::opts_chunk$set(echo = TRUE)
 
 
@@ -148,6 +145,9 @@ ui <- fluidPage(
                         
                tabPanel("Analysis", 
                         tabsetPanel(type = "tabs",
+                                    
+                                    # Streams analysis page
+                                    
                                     tabPanel("Popularity Analysis ",
                                              mainPanel(
                                                  titlePanel("A Stastical 
@@ -302,6 +302,9 @@ ui <- fluidPage(
                                                  br(),
                                                  )
                                     ),   
+                                    
+                                    # Loudness page
+                                    
                                     tabPanel("The Loudness War?",
                                              mainPanel(
                                                  titlePanel("Listens from 
@@ -428,6 +431,9 @@ ui <- fluidPage(
                                                  
                                              )
                                     ), 
+                                    
+                                    # Key analysis page 
+                                    
                                     tabPanel("Key analysis ", 
                                              mainPanel(
                                                  titlePanel("Kanye's Keys"),
@@ -580,7 +586,7 @@ server <- function(input, output) {
         
     }) 
     
-    # Distribution of Kanye's Keys
+    # Rendering the plot for distribution of Kanye's Keys in minor
     
     output$kanye_keys_plot3 <- renderPlot ({ 
         kanye %>% 
@@ -604,6 +610,8 @@ server <- function(input, output) {
         
     }) 
     
+    #  Rendering the plot for major keys. 
+    
     output$kanye_keys_plot4 <- renderPlot ({ 
         kanye %>% 
             distinct(track_name, album_name, album_release_date, key_mode, 
@@ -626,6 +634,8 @@ server <- function(input, output) {
         
     }) 
     
+    # Rendering photo of albums on pinterest. 
+    
     output$myImage <- renderImage({
         list(src = "myImage2.png",
              width = 480,
@@ -633,6 +643,7 @@ server <- function(input, output) {
              alt = "This is alternate text")
     }, deleteFile = FALSE) 
     
+    # Danceability vs. streams plot in a .gif format. 
     
     output$streamdance <- renderImage({
         list(src = "streamdance.gif",
@@ -640,6 +651,8 @@ server <- function(input, output) {
              height = 480,
              alt = "This is alternate text")
     }, deleteFile = FALSE)
+    
+    # Creating the loudness over time plot. 
     
     output$kanye_loud <- renderPlot ({ 
         kanye %>%  
@@ -655,12 +668,17 @@ server <- function(input, output) {
         
     }) 
     
+    # Creating the gt table for the loudness coefficients. 
+    
     output$table <-render_gt(
             expr = gt_tbl,
             height = px(600),
             width = px(600)
         ) 
     
+    # Creating a predictive mdoel with posterior epred. 
+    # The data was read in as a tibble. 
+    # The result was piped into a ggplot and modeled.
     
     output$loud_pred <- renderPlot( 
         posterior_epred(model1, newdata = new_obs) %>%  
@@ -680,6 +698,8 @@ server <- function(input, output) {
         
     )
     
+    # Creating a loudness over time plot
+    
     output$myImage4 <- renderImage({
         list(src = "outfile.gif",
              width = 480,
@@ -687,23 +707,24 @@ server <- function(input, output) {
              alt = "This is alternate text")
     }, deleteFile = FALSE) 
     
-    # Plotly 
+    # Creating a plotly object with hovering labels
     
     output$streamsfeatures <- renderPlotly(
         
         ggplotly(streamsf_plot, tooltip = "text")
     ) 
     
+    # Creating wordcloud with word cloud 2 
     
     output$wordcloud <- renderWordcloud2({
         
-        # Tibble of stream count per album 
+        # Tibble of stream count per album for the word cloud
         
         wc_tibble<-full_set %>%  
             subset(!is.na(Streams)) %>%    
             select(track_name, Streams) 
         
-        # Creating the wordcloud and setting the olo
+        # Creating the word cloud and setting the colors
                                                 
         wordcloud2(data = wc_tibble, 
                    fontFamily = "sans-serif", 
