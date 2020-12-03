@@ -1,0 +1,12 @@
+name: Test_12-2
+title: Test_12-2
+username:
+account: dashchin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3341798
+bundleId: 3935737
+url: https://dashchin.shinyapps.io/Test_12-2/
+when: 1606957004.59132
+asMultiple: FALSE
+asStatic: FALSE

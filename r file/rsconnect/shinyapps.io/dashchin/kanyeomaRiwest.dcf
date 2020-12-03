@@ -1,0 +1,12 @@
+name: kanyeomaRiwest
+title: kanyeomaRiwest
+username:
+account: dashchin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3342841
+bundleId: 3936424
+url: https://dashchin.shinyapps.io/kanyeomaRiwest/
+when: 1606969578.51171
+asMultiple: FALSE
+asStatic: FALSE
