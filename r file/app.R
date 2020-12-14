@@ -40,21 +40,28 @@ library(gganimate)
 
 library(stringr)
 
-# For creating the  worldcloud
+# Library for creating the  worldcloud
 
 library(wordcloud2) 
 
 
+# In this first section, I declare the important or "global" 
+# data sets used throughout my project. Shiny was having issues when these 
+# objects were declared later. 
 
 # Getting a large data set from the spotifyr library 
+# Link to the Spotify API: 
+# https://developer.spotify.com/documentation/web-api/
 
 kanye <- get_artist_audio_features('kanye west')
 
-# Importing a csv of Kanye's streaming statistics on Spotify
+# Importing a csv of Kanye's streaming statistics on Spotify. 
+# Data taken from here: 
+# https://kworb.net/spotify/artist/5K4W6rqBFWDnAN6FQUkS6x.html
 
 Kanye_streams <- read_csv("Kanye streams.csv")
 
-# Joining together the streams and spotify data 
+# Joining together the streams data set and the Spotify API. 
 
 full_set <- Kanye_streams %>% 
     mutate(collabs = str_count(With, ",") + 1) %>%  
@@ -63,7 +70,7 @@ full_set <- Kanye_streams %>%
     full_join(kanye, by = "track_name") %>%  
     distinct(track_name, .keep_all = TRUE) 
 
-# A tibble representing an album released in 2000 
+# A tibble representing an album released in 2020 
 
 new_obs <- tibble(album_release_year = 2020)
 
@@ -76,7 +83,36 @@ gt_tbl <- stan_glm(data = kanye, refresh = 0,
     tab_header(title = "Regression of Loudness by Release Date",
                subtitle = "The Effect of Time on Loudness") 
 
-# Creating a model of loudness as a function of album release year
+# This is a data set that selects musical attributes of album songs with 
+# stream count. This is for the table created at the bottom of tab 1. 
+
+histo_big <- full_set %>% 
+    mutate(collabs = str_count(With, ",") + 1) %>% 
+    subset(!is.na(danceability)) %>%
+    subset(!is.na(Streams)) %>%
+    mutate(duration_seconds = duration_ms / 1000) %>% 
+    select(Streams, danceability, energy, key, loudness, mode, 
+           speechiness, acousticness, instrumentalness, liveness, tempo, 
+           duration_seconds, duration_ms) 
+
+
+# Table that shoes streams as the outcome variable and multiple song attributes
+# as the independent variables. This is used under the "Popularity Analysis" 
+# tab
+
+gt_tbl2 <- stan_glm(data = histo_big, 
+                    refresh = 0, 
+                    formula = Streams ~ danceability +  key + 
+                        loudness + mode + speechiness + acousticness  + 
+                        liveness + tempo + duration_ms) %>%
+    tbl_regression() %>%
+    as_gt() %>%
+    tab_header(title = "Regression of Loudness by Various Song Attributes",
+               subtitle = "Estimated Effect of Attributes, with an Intercept") 
+
+# Creating a model of loudness as a function of album release year. This for 
+# the second tab concerning the loudness war and used to predict the loudness
+# of a new song.
 
 model1 <- stan_glm(data = kanye, refresh = 0, loudness ~ album_release_year) 
 
@@ -94,7 +130,10 @@ streamsf_plot <- Kanye_streams %>%
     labs(x = "Number of Features", 
          y = "Number of Streams", 
          title = "Streams as a function of features", 
-         subtitle = "Including singles.")
+         subtitle = "Including singles.") 
+
+
+
 
 
  # Knit options
@@ -117,11 +156,15 @@ ui <- fluidPage(
                         we can observe in his music and activity. For example, 
                         how does the music vary between West's albums? 
                         Are there more commonalities between his hits than we 
-                        might think? Beyond his music, what about his 
-                        presidential run this year? Did it affect West's 
-                        streaming or Twitter engagement? 
-                        What can this tell us about presidential runs and their 
-                        effect on the businesses of political outsiders? In this 
+                        might think? By looking at statistics and musical
+                        attributes of Kanye's music, we may be able to make 
+                        inferences about pop music gennerally in recent years. 
+                        With the rise of computers and modern production, 
+                        peraps songs are becoming less acoustic or live. 
+                        While this study is very much focused on the specific
+                        musical patterns in Kanye West's music, there is an 
+                        overarching interest in how demand affects the music 
+                        artists like Kanye make (if they do at all). In this 
                           project, I seek out to confront all of these questions 
                           - not necessarily to draw a definitive answer - but to 
                           perhaps shed some light on the mystery and fascination 
@@ -149,8 +192,9 @@ ui <- fluidPage(
                                     # Streams analysis page
                                     
                                     tabPanel("Popularity Analysis ",
+                        
                                              mainPanel(
-                                                 titlePanel("A Stastical 
+                                                 titlePanel("A Statistical 
                                                  Analysis
                                                             of Streams"), 
                                                  br(), 
@@ -168,7 +212,7 @@ ui <- fluidPage(
                                                  into greater trends of 
                                                  entertainment. How well do 
                                                  these stream numbers map onto 
-                                                 other artists?Using temperance, 
+                                                 other artists? Using temperance, 
                                                  we can say that we should be 
                                                  cautious. One thing to keep in 
                                                  mind is that Kanye holds his 
@@ -180,7 +224,8 @@ ui <- fluidPage(
                                                  Kanye is someone with a lot of 
                                                  influence, maybe we can explain 
                                                  some trends through the 
-                                                 patterns we see in his music."), 
+                                                 patterns we see in his music."
+                                                   ), 
                                                  em("Hover over a title to view 
                                                     each song's cumulative 
                                                     streams"),
@@ -206,7 +251,7 @@ ui <- fluidPage(
                                                  artists in a given track, each 
                                                  artist has a chance to increase 
                                                  their fanbase by explaning into 
-                                                 other ones.Moreover, upon 
+                                                 other ones. Moreover, upon 
                                                  release, the audience of the 
                                                  song is expected to increase 
                                                  dramatically. Below, we can see 
@@ -220,7 +265,8 @@ ui <- fluidPage(
                                                             title and number of 
                                                             respective featured 
                                                             artists."),
-                                                 plotlyOutput("streamsfeatures"),
+                                                 plotlyOutput("streamsfeatures"
+                                                              ),
                                                  br(), 
                                                  br(), 
                                                  br(),
@@ -232,8 +278,8 @@ ui <- fluidPage(
                                                  is not even close to the 
                                                  collaborative track with the 
                                                  greatest number of hits. As 
-                                                 shown by the data, 'I Love it 
-                                                 With' (featuring Lil Pump) 
+                                                 shown by the data, 'I Love it' 
+                                                 (featuring Lil Pump) 
                                                  seems to reign supreme. 
                                                  Moreover, other songs with only
                                                  one feature, like 
@@ -242,7 +288,8 @@ ui <- fluidPage(
                                                  features? Perhaps one of the 
                                                  greater points we can draw from 
                                                  this graph is that there is not 
-                                                 a high correlation between the 
+                                                 a strong relationship between 
+                                                 the 
                                                  number of collaborators and the 
                                                  number of streams. A lot of 
                                                  things go into making a popular 
@@ -298,7 +345,43 @@ ui <- fluidPage(
                                                  br(), 
                                                  br(), 
                                                  br(), 
+                                                 titlePanel("Stream Count As a 
+                                                 Function of Many Variables"),
                                                  br(),
+                                                 p("This table gives some
+                                                   insight into the effect of 
+                                                   some song attributes on
+                                                   streaming (if there is any
+                                                   at all)."),
+                                                 br(), 
+                                                 tableOutput("table_big"),
+                                                 
+                                                   p("It is significant 
+                                                   to note that some of these 
+                                                   variables are not able to be 
+                                                   used with confidence. If we
+                                                   take a look at the
+                                                   confidence intervals for 
+                                                   some attributes, like key
+                                                   and mode, we can see that 
+                                                   the range includes zero. As
+                                                   it is possible for there be 
+                                                   an effect in either
+                                                   direction, it is likely that 
+                                                   the given coefficient is not 
+                                                   particularly helpful. 
+                                                   However, for an attribute
+                                                   like tempo, the confidence
+                                                   interval shows all positive
+                                                   values. Because of this, one
+                                                   might be able to argue for 
+                                                   an effect of tempo on 
+                                                   streaming with more support.
+                                                   The following equation 
+                                                   reprsents the table above."
+                                                     ),
+                                                 br(), 
+                                                 imageOutput("equation"),
                                                  br(),
                                                  )
                                     ),   
@@ -336,10 +419,9 @@ ui <- fluidPage(
                                                    Rick Rubin, a legendary MC
                                                    and producer who frequently
                                                    collaborates with Kanye.
-                                                   Below, we can see a graph 
-                                                   of the 
-                                                   
-                                                   "),
+                                                   Below, we can see an 
+                                                   animated graph of 
+                                                   song volumes by album."),
                                                  imageOutput("myImage4"),
                                                  br(), 
                                                  br(),
@@ -372,7 +454,7 @@ ui <- fluidPage(
                                                  br(),
                                                  br(),
                                                  br(),
-                                                 titlePanel("Release Date as
+                                                 titlePanel("Release Dates as
                                                              Coefficients for
                                                              Loudness"),
                                                  p("The following table gives
@@ -393,13 +475,15 @@ ui <- fluidPage(
                                                  br(),
                                                  br(), 
                                                  titlePanel("Predicting the
-                                                             Future of Loud"),
+                                                             Future of Loudness"
+                                                            ),
                                                  p("While Kanye hasn't 
                                                     released much music this 
                                                     year, how loud could a Kanye
                                                     song be if it were released
                                                     this year? Below, I've 
-                                                    generated some predictions."),
+                                                    generated some predictions."
+                                                   ),
                                                  plotOutput("loud_pred"), 
                                                  br(),
                                                  br(),
@@ -427,7 +511,7 @@ ui <- fluidPage(
                                                    volume, like Soundcloud
                                                    before we make definitive
                                                    statements about Kanye's 
-                                                   loudness"), 
+                                                   loudness."), 
                                                  
                                              )
                                     ), 
@@ -436,8 +520,8 @@ ui <- fluidPage(
                                     
                                     tabPanel("Key analysis ", 
                                              mainPanel(
-                                                 titlePanel("Kanye's Keys"),
-                                                 headerPanel("Kanye's Favorite 
+                                                 headerPanel("Kanye's Keys"),
+                                                 titlePanel("Kanye's Favorite 
                                                              Keys (Overall)"),
                                                  br(),
                                                  p("Here, we can see the total
@@ -448,7 +532,29 @@ ui <- fluidPage(
                                                  plotOutput("kanye_keys_plot"), 
                                                  br(),
                                                  p("There seems to be a clear
-                                                   preference for C#/Db Major"),
+                                                   preference for C#/Db Major.
+                                                   One possible explanation for
+                                                   this skew could be the 
+                                                   consistency of Kanye's 
+                                                   production team. Across his 
+                                                   albums, Kanye has frequently
+                                                   collaborated with producers
+                                                   like T.I. and Mike Dean. 
+                                                   Kanye is also a producer
+                                                   on his own albums. One thing 
+                                                   that might be interesting
+                                                   to look at is the 
+                                                   distribution of keys across
+                                                   Mike Dean or T.I.'s other
+                                                   works. Another thing to 
+                                                   keep in mind is the chicken
+                                                   and egg scenario. Are songs
+                                                   written in these keys first,
+                                                   or are these keys used 
+                                                   in response to the demands of 
+                                                   the market? I would argue
+                                                   that producers go by feel, 
+                                                   but you never know."),
                                                  br(),
                                                  br(),
                                                  br(),
@@ -460,9 +566,15 @@ ui <- fluidPage(
                                                  br(),
                                                  p("Using the slider, we can
                                                    visualize the distribution 
-                                                   of keys in each album. There
-                                                   is a stark difference 
-                                                   between albums."),
+                                                   of keys in each album. 
+                                                   Overall, one can observe 
+                                                   that there is considerable 
+                                                   variation between albums. 
+                                                   Some albums have an equal 
+                                                   distribution of keys used, 
+                                                   while others have 
+                                                   considerable and clear skews."
+                                                   ),
                                                  br(),
                                                  shinyWidgets::sliderTextInput(
                                                      inputId = "selected_album", 
@@ -652,13 +764,22 @@ server <- function(input, output) {
              alt = "This is alternate text")
     }, deleteFile = FALSE)
     
+    # Rendering the image of the equation for the streaming table.
+    
+    output$equation <- renderImage({
+        list(src = "Equation.JPG",
+             width = 1142,
+             height = 40,
+             alt = "This is alternate text")
+    }, deleteFile = FALSE)
+    
     # Creating the loudness over time plot. 
     
     output$kanye_loud <- renderPlot ({ 
         kanye %>%  
             select(album_release_date, loudness, track_name, album_name) %>%  
             ggplot(aes(x = album_release_date, y = loudness, 
-                       color = "lightsalmon1")) + 
+                       color = album_name)) +
             geom_jitter() +
             theme_bw() + 
             labs(title = "Loudness of Kanye West Songs over Time", 
@@ -676,6 +797,15 @@ server <- function(input, output) {
             width = px(600)
         ) 
     
+    
+    # Creating the gt table for the loudness coefficients. 
+    
+    output$table_big <-render_gt(
+        expr = gt_tbl2,
+        height = px(600),
+        width = px(600)
+    ) 
+    
     # Creating a predictive mdoel with posterior epred. 
     # The data was read in as a tibble. 
     # The result was piped into a ggplot and modeled.
@@ -684,9 +814,11 @@ server <- function(input, output) {
         posterior_epred(model1, newdata = new_obs) %>%  
             as_tibble() %>%  
             mutate_all(as.numeric) %>%  
-            ggplot(aes(x = `1`, color = "darkorange1")) + 
-            geom_histogram(aes(y = after_stat(count/sum(count))), 
+            ggplot(aes(x = `1`)) + 
+            geom_histogram(aes(y = after_stat(count/sum(count)), 
+                               fill = "darkorange1"), 
                            bins = 100) + 
+            guides(fill = FALSE)+
             labs(title = "Posterior for loudness of songs in 2020", 
                  x = "Loudness (dB", 
                  y = "Percentage", 
